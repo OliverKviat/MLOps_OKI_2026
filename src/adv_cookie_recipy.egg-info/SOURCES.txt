@@ -16,3 +16,4 @@ src/adv_cookie_recipy.egg-info/top_level.txt
 tests/test_api.py
 tests/test_data.py
 tests/test_model.py
+tests/test_training.py
