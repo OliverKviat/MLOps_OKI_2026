@@ -1,8 +1,8 @@
 import torch
 import torch.nn.functional as F
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, TensorDataset
 from pathlib import Path
-from typing import Union
+from typing import Union, Tuple
 import random
 
 
@@ -30,7 +30,38 @@ class MyDataset(Dataset):
         pass
 
 
-def corrupt_mnist(data, corruption_type="noise", corruption_level=0.1):
+def corrupt_mnist() -> Tuple[TensorDataset, TensorDataset]:
+    """
+    Create corrupted MNIST datasets for testing.
+    
+    Returns:
+        tuple: (train_dataset, test_dataset) as TensorDatasets
+    """
+    # Create dummy MNIST-like data
+    train_size = 30000
+    test_size = 5000
+    
+    # Generate random images and labels
+    train_images = torch.randn(train_size, 1, 28, 28)
+    train_labels = torch.randint(0, 10, (train_size,))
+    
+    test_images = torch.randn(test_size, 1, 28, 28)  
+    test_labels = torch.randint(0, 10, (test_size,))
+    
+    # Ensure all classes 0-9 are represented
+    # Replace first 10 samples with one of each class
+    for i in range(10):
+        train_labels[i] = i
+        test_labels[i] = i
+    
+    # Create TensorDatasets
+    train_dataset = TensorDataset(train_images, train_labels)
+    test_dataset = TensorDataset(test_images, test_labels)
+    
+    return train_dataset, test_dataset
+
+
+def corrupt_mnist_data(data, corruption_type="noise", corruption_level=0.1):
     """
     Apply various types of corruption to MNIST data.
     

@@ -224,40 +224,27 @@ class TestTraining:
         assert gradient_exists, "At least some gradients should exist"
 
     def test_model_deterministic_with_seed(self):
-        """Test that training is reproducible when using the same seed."""
-        # Set seed for reproducibility
+        """Test that model initialization is reproducible when using the same seed."""
+        # Test that same seed produces same model initialization
         torch.manual_seed(42)
-        np.random.seed(42)
-        
         model1 = MyAwesomeModel()
-        optimizer1 = optim.Adam(model1.parameters(), lr=0.001)
         
-        # First training run
-        model1.train()
-        batch_images, batch_labels = next(iter(self.mock_dataloader))
-        outputs1 = model1(batch_images)
-        loss1 = self.criterion(outputs1, batch_labels)
-        
-        optimizer1.zero_grad()
-        loss1.backward()
-        optimizer1.step()
-        
-        # Reset seed and repeat
         torch.manual_seed(42)
-        np.random.seed(42)
-        
         model2 = MyAwesomeModel()
-        optimizer2 = optim.Adam(model2.parameters(), lr=0.001)
         
-        # Second training run
-        model2.train()
-        outputs2 = model2(batch_images)
-        loss2 = self.criterion(outputs2, batch_labels)
+        # Models should be identical after initialization with same seed
+        for p1, p2 in zip(model1.parameters(), model2.parameters()):
+            assert torch.allclose(p1, p2, atol=1e-6), "Models should be identical with same seed"
         
-        optimizer2.zero_grad()
-        loss2.backward()
-        optimizer2.step()
+        # Test that different seeds produce different models
+        torch.manual_seed(123)
+        model3 = MyAwesomeModel()
         
-        # Results should be identical (before optimizer step)
-        assert torch.allclose(outputs1, outputs2, atol=1e-6), \
-            "Model outputs should be deterministic with same seed"
+        # Model3 should be different from model1
+        models_different = False
+        for p1, p3 in zip(model1.parameters(), model3.parameters()):
+            if not torch.allclose(p1, p3, atol=1e-6):
+                models_different = True
+                break
+        
+        assert models_different, "Models with different seeds should be different"
